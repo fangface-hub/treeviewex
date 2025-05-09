@@ -1,0 +1,14 @@
+[report]
+exclude_lines =
+    def column
+    def combined_handler
+    def bind
+    def pack
+    def grid
+    def get_clicked_cell_id_pair
+    def on_double_click
+    def _on_return
+    def _on_focus_out
+    def _on_escape
+    pragma: no cover
+ 
