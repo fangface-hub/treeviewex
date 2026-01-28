@@ -1,14 +1,8 @@
 # python3
 """Treeview拡張版."""
+from tkinter import HORIZONTAL, VERTICAL, Entry, Event, Frame
+from tkinter.ttk import Scrollbar, Treeview
 from typing import Callable
-from tkinter import (
-    Frame,
-    Entry,
-    VERTICAL,
-    HORIZONTAL,
-    Event,
-)
-from tkinter.ttk import Treeview, Scrollbar
 
 
 def _colid2colindex(column_id: str) -> int:
@@ -64,15 +58,15 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         self.entry.bind("<Escape>", self._on_escape)
 
         # 縦方向スクロールバーを作成し、Canvasに接続
-        self.scrollbar_y = Scrollbar(
-            self.frame, orient=VERTICAL, command=self._on_scroll_y
-        )
+        self.scrollbar_y = Scrollbar(self.frame,
+                                     orient=VERTICAL,
+                                     command=self._on_scroll_y)
         self.configure(yscrollcommand=self.scrollbar_y.set)
 
         # 横方向スクロールバーを作成し、Canvasに接続
-        self.scrollbar_x = Scrollbar(
-            self.frame, orient=HORIZONTAL, command=self._on_scroll_x
-        )
+        self.scrollbar_x = Scrollbar(self.frame,
+                                     orient=HORIZONTAL,
+                                     command=self._on_scroll_x)
         self.configure(xscrollcommand=self.scrollbar_x.set)
 
         super().grid(row=0, column=0, sticky="nsew")
@@ -182,9 +176,10 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         if self._original_bind_double_click:
             self._original_bind_double_click(event)  # 元の振る舞い
 
-    def bind(
-        self, sequence: str = None, func: Callable = None, add: bool = None
-    ) -> str:
+    def bind(self,
+             sequence: str = None,
+             func: Callable = None,
+             add: bool = None) -> str:
         """
         bindのオーバーライド.
 
@@ -308,7 +303,9 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         None.
 
         """
-        self.start_edit(self.get_clicked_cell_id_pair(event))
+        cell_id_pair = self.get_clicked_cell_id_pair(event)
+        if cell_id_pair != ('', ''):
+            self.start_edit(cell_id_pair)
 
     def get_cell_value(self, cell_id_pair: tuple) -> str:
         """
@@ -336,11 +333,8 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         row_id, column_id = cell_id_pair
 
         # readonly のチェック
-        if (
-            row_id in self.readonly_rows
-            or column_id in self.readonly_columns
-            or cell_id_pair in self.readonly_cells
-        ):
+        if (row_id in self.readonly_rows or column_id in self.readonly_columns
+                or cell_id_pair in self.readonly_cells):
             return  # 編集をスキップ
 
         # 編集処理を続行
@@ -351,8 +345,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         bbox = self.bbox(row_id, column_id)
         if not bbox:
             raise ValueError(
-                f"Cannot determine the position of the cell: {cell_id_pair}"
-            )
+                f"Cannot determine the position of the cell: {cell_id_pair}")
 
         x, y, width, height = bbox
 
@@ -384,8 +377,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
             return False  # pragma: no cover
 
         if row_id not in self.get_children() or col_index >= len(
-            self["columns"]
-        ):
+                self["columns"]):
             return False
 
         return True
@@ -440,18 +432,18 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         else:
             self.readonly_rows.discard(row_id)
 
-    def set_readonly_column(
-        self, column_id: str, readonly: bool = True
-    ) -> None:
+    def set_readonly_column(self,
+                            column_id: str,
+                            readonly: bool = True) -> None:
         """列を readonly に設定."""
         if readonly:
             self.readonly_columns.add(column_id)
         else:
             self.readonly_columns.discard(column_id)
 
-    def set_readonly_cell(
-        self, cell_id_pair: tuple, readonly: bool = True
-    ) -> None:
+    def set_readonly_cell(self,
+                          cell_id_pair: tuple,
+                          readonly: bool = True) -> None:
         """セルを readonly に設定."""
         if readonly:
             self.readonly_cells.add(cell_id_pair)

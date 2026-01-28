@@ -1,4 +1,5 @@
 # TreeviewEx
+
 Treeview の拡張版<br>
 `Enhanced version of Treeview`
 
@@ -12,45 +13,45 @@ tkinter の Treeview に以下の機能を追加<br>`Added the following feature
 
 ---
 
-# テスト方法<br>`How to test`
+## テスト方法<br>`How to test`
 
 1. 必要なパッケージをインストールする<br>`Install required packages`
 
-    ```
+    ```bash
     pip install coverage
     ```
 
 2. テストを実行する<br>`Run the tests`
 
-    ```
+    ```bash
     coverage run -m unittest discover
     ```
 
 3. カバレッジレポートを表示する<br>`Display the coverage report`
 
-    ```
+    ```bash
     coverage report -m
     ```
 
 4. HTML レポートを生成する（オプション）<br>`Generate an HTML report (optional)`
 
-    ```
+    ```bash
     coverage html
     ```
 
 ---
 
-# ビルド方法<br>`How to build`
+## ビルド方法<br>`How to build`
 
 1. 必要なパッケージをインストールする<br>`Install required packages`
 
-    ```
+    ```bash
     pip install setuptools wheel
     ```
 
 2. ビルドコマンドを打つ<br>`Run the build command`
 
-    ```
+    ```bash
     python setup.py bdist_wheel
     ```
 
@@ -58,11 +59,11 @@ tkinter の Treeview に以下の機能を追加<br>`Added the following feature
 
 ---
 
-# 使用方法<br>`How to use`
+## 使用方法<br>`How to use`
 
 1. パッケージをインストールする<br>`Install the package`
 
-    ```
+    ```bash
     pip install path/to/TreeviewEx.whl
     ```
 
@@ -120,11 +121,12 @@ tkinter の Treeview に以下の機能を追加<br>`Added the following feature
 
 ---
 
-# 公開インターフェース<br>`Public Interfaces`
+## 公開インターフェース<br>`Public Interfaces`
 
 以下は `TreeviewEx` クラスの主な公開インターフェースです。<br>`The following are the main public interfaces of the TreeviewEx class.`
 
 ### `set_readonly_row(row_id: str, readonly: bool = True) -> None`
+
 指定した行を編集不可（readonly）に設定します。<br>`Set the specified row to readonly.`
 
 - **Parameters**
@@ -132,6 +134,7 @@ tkinter の Treeview に以下の機能を追加<br>`Added the following feature
   - `readonly` (`bool`, optional): `True` の場合は編集不可、`False` の場合は編集可能に設定します。デフォルトは `True`。<br>`Set to True to make the row readonly, or False to make it editable. Default is True.`
 
 - **Example**
+
     ```python
     treeview_ex.set_readonly_row(row_id="I002", readonly=True)
     ```
@@ -139,6 +142,7 @@ tkinter の Treeview に以下の機能を追加<br>`Added the following feature
 ---
 
 ### `set_readonly_column(column_id: str, readonly: bool = True) -> None`
+
 指定した列を編集不可（readonly）に設定します。<br>`Set the specified column to readonly.`
 
 - **Parameters**
@@ -146,6 +150,7 @@ tkinter の Treeview に以下の機能を追加<br>`Added the following feature
   - `readonly` (`bool`, optional): `True` の場合は編集不可、`False` の場合は編集可能に設定します。デフォルトは `True`。<br>`Set to True to make the column readonly, or False to make it editable. Default is True.`
 
 - **Example**
+
     ```python
     treeview_ex.set_readonly_column(column_id="#2", readonly=True)
     ```
@@ -153,6 +158,7 @@ tkinter の Treeview に以下の機能を追加<br>`Added the following feature
 ---
 
 ### `set_readonly_cell(cell_id_pair: tuple, readonly: bool = True) -> None`
+
 指定したセルを編集不可（readonly）に設定します。<br>`Set the specified cell to readonly.`
 
 - **Parameters**
@@ -166,7 +172,7 @@ tkinter の Treeview に以下の機能を追加<br>`Added the following feature
 
 ---
 
-# ライセンス<br>`License`
+## ライセンス<br>`License`
 
 このプロジェクトは MIT ライセンスの下で公開されています。<br>
 `This project is licensed under the MIT License.`
