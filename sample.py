@@ -1,3 +1,5 @@
+# sample.py
+# pylint: disable=E1102
 from tkinter import Tk
 
 from treeviewex import TreeviewEx
@@ -37,6 +39,23 @@ treeview_ex.set_readonly_column(column_id="#2", readonly=True)
 treeview_ex.set_readonly_cell(
     cell_id_pair=("I003", "#3"),
     readonly=True)  # セルをreadonlyに設定(Set a cell to readonly)
+
+# comboboxの設定(Combobox settings)
+# 行をcomboboxに設定(Set a row to combobox)
+treeview_ex.set_combobox_row(
+    row_id="I004",
+    values=["Row Option A", "Row Option B", "Row Option C"],
+    is_combobox=True)
+# 列をcomboboxに設定(Set a column to combobox)
+treeview_ex.set_combobox_column(
+    column_id="#1",
+    values=["Col Option A", "Col Option B", "Col Option C"],
+    is_combobox=True)
+# セルをcomboboxに設定(Set a cell to combobox with specific values)
+treeview_ex.set_combobox_cell(
+    cell_id_pair=("I005", "#3"),
+    values=["Option A", "Option B", "Option C", "Option D"],
+    is_combobox=True)
 
 # Frameの行と列の重みを設定して、レイアウトを調整
 # (Adjust the layout by setting row and column
