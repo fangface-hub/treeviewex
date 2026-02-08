@@ -2,9 +2,10 @@
 """Treeview拡張版のテストコード."""
 # pylint: disable=protected-access
 import unittest
+from tkinter import Event, Tk
 from unittest.mock import MagicMock
-from tkinter import Tk
-from treeviewex import TreeviewEx
+
+from treeviewex import CellType, TreeviewEx
 
 
 class TestTreeviewEx(unittest.TestCase):
@@ -35,7 +36,12 @@ class TestTreeviewEx(unittest.TestCase):
         )
 
         # bbox メソッドをモック
-        self.treeview_ex.bbox = MagicMock(return_value=(0, 0, 100, 20))
+        def _fake_bbox(item, column=None):
+            _ = item  # unused 回避
+            _ = column  # unused 回避
+            return (0, 0, 100, 20)  # or (0, 0, 0, 0)
+
+        self.treeview_ex.bbox = _fake_bbox
 
         # entry ウィジェットをモック
         self.treeview_ex.entry = MagicMock()
@@ -64,7 +70,9 @@ class TestTreeviewEx(unittest.TestCase):
 
     def test_get_clicked_cell_id_pair(self):
         """Test get_clicked_cell_id_pair method."""
-        event = type("Event", (object,), {"x": 50, "y": 20})()
+        event = Event()
+        event.x = 50
+        event.y = 20
         cell_id_pair = self.treeview_ex.get_clicked_cell_id_pair(event)
         self.assertEqual(cell_id_pair, ("", ""))  # No cell clicked
 
@@ -94,7 +102,7 @@ class TestTreeviewEx(unittest.TestCase):
             self.treeview_ex.start_edit(("row1", "invalid_column"))
 
         # bbox が None の場合のエラー
-        self.treeview_ex.bbox = lambda row_id, column_id: None  # bbox をモック
+        self.treeview_ex.bbox = lambda item, column=None: ""  # bbox をモック
         with self.assertRaises(ValueError):
             self.treeview_ex.start_edit(("row1", "#1"))
 
@@ -112,10 +120,10 @@ class TestTreeviewEx(unittest.TestCase):
 
     def test_start_edit_bbox_none(self):
         """Test start_edit when bbox returns None."""
-        # bbox をモックして None を返す
-        self.treeview_ex.bbox = lambda row_id, column_id: None
+        # bbox をモックして空文字列を返す
+        self.treeview_ex.bbox = lambda item, column=None: ""
 
-        # bbox が None の場合にエラーが発生することを確認
+        # bbox が空の場合にエラーが発生することを確認
         with self.assertRaises(ValueError):
             self.treeview_ex.start_edit(("row1", "#1"))
 
@@ -174,7 +182,8 @@ class TestTreeviewEx(unittest.TestCase):
 
     def test_mouse_wheel(self):
         """Test mouse wheel scrolling."""
-        event = type("Event", (object,), {"delta": 120})()
+        event = Event()
+        event.delta = 120
         self.treeview_ex._on_mouse_wheel(  # pylint: disable=protected-access
             event
         )
@@ -182,7 +191,8 @@ class TestTreeviewEx(unittest.TestCase):
 
     def test_mouse_wheel_scroll_up(self):
         """Test mouse wheel scrolling up."""
-        event = type("Event", (object,), {"delta": 120})()
+        event = Event()
+        event.delta = 120
         self.treeview_ex._on_mouse_wheel(  # pylint: disable=protected-access
             event
         )
@@ -190,7 +200,8 @@ class TestTreeviewEx(unittest.TestCase):
 
     def test_mouse_wheel_scroll_down(self):
         """Test mouse wheel scrolling down."""
-        event = type("Event", (object,), {"delta": -120})()
+        event = Event()
+        event.delta = -120
         self.treeview_ex._on_mouse_wheel(  # pylint: disable=protected-access
             event
         )
@@ -241,9 +252,8 @@ class TestTreeviewEx(unittest.TestCase):
         )
 
         # マウスホイールイベントをシミュレート
-        event = type(
-            "Event", (object,), {"delta": 120}
-        )()  # 正の delta は上スクロール
+        event = Event()
+        event.delta = 120
         self.treeview_ex._on_mouse_wheel(event)
 
         # 編集がキャンセルされていることを確認
@@ -256,71 +266,17 @@ class TestTreeviewEx(unittest.TestCase):
 
     def test_additional_bind_double_click(self):
         """Test _additional_bind_double_click method."""
-        # ダブルクリックイベントをシミュレート
-        # on_double_click メソッドをモック
         self.treeview_ex.on_double_click = MagicMock()
+        mock_event = MagicMock()
 
-        # 既存の <Double-1> バインドをモック
-        original_handler = MagicMock()
-        self.treeview_ex._original_bind_double_click = original_handler
-
-        # bind メソッドをモック
-        self.treeview_ex.bind = MagicMock()
-
-        # ダブルクリックハンドラを追加
         self.treeview_ex._additional_bind_double_click()
+        self.treeview_ex._combined_handler(mock_event)
 
-        # on_double_click が呼び出されることを確認
-        self.treeview_ex.on_double_click.assert_not_called()
-
-        # 元のハンドラが呼び出されることを確認
-        original_handler.assert_not_called()
+        self.treeview_ex.on_double_click.assert_called_once_with(mock_event)
 
     def test_combined_handler(self):
         """Test _combined_handler method."""
         mock_event = MagicMock()
-
-        # on_double_click メソッドをモック
-        self.treeview_ex.on_double_click = MagicMock()
-
-        # 元のハンドラをモック
-        self.treeview_ex._original_bind_double_click = MagicMock()
-
-        # _combined_handler を呼び出す
-        self.treeview_ex._combined_handler(mock_event)
-
-        # on_double_click が呼び出されたことを確認
-        self.treeview_ex.on_double_click.assert_called_once_with(mock_event)
-
-        # 元のハンドラが呼び出されたことを確認
-        self.treeview_ex._original_bind_double_click.assert_called_once_with(
-            mock_event
-        )
-
-    def test_combined_handler_with_original_handler(self):
-        """Test _combined_handler when _original_bind_double_click is set."""
-        mock_event = MagicMock()
-
-        # 元のハンドラをモック
-        original_handler = MagicMock()
-        self.treeview_ex._original_bind_double_click = original_handler
-
-        # on_double_click メソッドをモック
-        self.treeview_ex.on_double_click = MagicMock()
-
-        # _combined_handler を呼び出す
-        self.treeview_ex._combined_handler(mock_event)
-
-        # on_double_click と元のハンドラが呼び出されたことを確認
-        self.treeview_ex.on_double_click.assert_called_once_with(mock_event)
-        original_handler.assert_called_once_with(mock_event)
-
-    def test_combined_handler_without_original_handler(self):
-        """Test _combined_handler when _original_bind_double_click is not set."""
-        mock_event = MagicMock()
-
-        # 元のハンドラを None に設定
-        self.treeview_ex._original_bind_double_click = None
 
         # on_double_click メソッドをモック
         self.treeview_ex.on_double_click = MagicMock()
@@ -378,6 +334,143 @@ class TestTreeviewEx(unittest.TestCase):
         self.assertEqual(
             self.treeview_ex._editing_cell, ("row1", "#1")
         )  # 編集が開始される
+
+    def test_get_cell_type(self):
+        """Test _get_cell_type method."""
+        self.assertEqual(
+            self.treeview_ex._get_cell_type(("row1", "#1")),
+            CellType.ENTRY,
+        )
+
+        self.treeview_ex.set_readonly_row("row1")
+        self.assertEqual(
+            self.treeview_ex._get_cell_type(("row1", "#1")),
+            CellType.READONLY,
+        )
+
+        self.treeview_ex.set_readonly_row("row1", readonly=False)
+        self.treeview_ex.set_combobox_column("#1")
+        self.assertEqual(
+            self.treeview_ex._get_cell_type(("row1", "#1")),
+            CellType.COMBOBOX,
+        )
+
+    def test_on_return_updates_cell(self):
+        """Test _on_return method."""
+        self.treeview_ex._editing_cell = ("row1", "#1")
+        self.treeview_ex.update_cell = MagicMock()
+        widget = MagicMock()
+        event = type("Event", (object,), {"widget": widget})()
+
+        self.treeview_ex._on_return(event)
+
+        self.treeview_ex.update_cell.assert_called_once_with(
+            ("row1", "#1"), widget
+        )
+
+    def test_on_focus_out_updates_cell(self):
+        """Test _on_focus_out method."""
+        self.treeview_ex._editing_cell = ("row1", "#1")
+        self.treeview_ex.update_cell = MagicMock()
+        widget = MagicMock()
+        event = type("Event", (object,), {"widget": widget})()
+
+        self.treeview_ex._on_focus_out(event)
+
+        self.treeview_ex.update_cell.assert_called_once_with(
+            ("row1", "#1"), widget
+        )
+
+    def test_on_escape_cancels_edit(self):
+        """Test _on_escape method."""
+        self.treeview_ex._editing_cell = ("row1", "#1")
+        self.treeview_ex.cancel_edit = MagicMock()
+        event = type("Event", (object,), {})()
+
+        self.treeview_ex._on_escape(event)
+
+        self.treeview_ex.cancel_edit.assert_called_once_with()
+
+    def test_on_combobox_selected_updates_cell(self):
+        """Test _on_combobox_selected method."""
+        self.treeview_ex._editing_cell = ("row1", "#1")
+        self.treeview_ex.update_cell = MagicMock()
+        widget = MagicMock()
+        event = type("Event", (object,), {"widget": widget})()
+
+        self.treeview_ex._on_combobox_selected(event)
+
+        self.treeview_ex.update_cell.assert_called_once_with(
+            ("row1", "#1"), widget
+        )
+
+    def test_set_combobox_toggles(self):
+        """Test combobox setters with on/off behavior."""
+        self.treeview_ex.set_combobox_row("row1", values=["A", "B"])
+        self.treeview_ex.set_combobox_column("#1", values=["C", "D"])
+        self.treeview_ex.set_combobox_cell(("row1", "#1"), values=["E", "F"])
+
+        self.assertIn("row1", self.treeview_ex.combobox_rows)
+        self.assertIn("#1", self.treeview_ex.combobox_columns)
+        self.assertIn(("row1", "#1"), self.treeview_ex.combobox_cells)
+        self.assertEqual(
+            self.treeview_ex.combobox_row_values["row1"],
+            [
+                "A",
+                "B",
+            ],
+        )
+        self.assertEqual(
+            self.treeview_ex.combobox_column_values["#1"],
+            [
+                "C",
+                "D",
+            ],
+        )
+        self.assertEqual(
+            self.treeview_ex.combobox_cell_values[("row1", "#1")],
+            ["E", "F"],
+        )
+
+        self.treeview_ex.set_combobox_row("row1", is_combobox=False)
+        self.treeview_ex.set_combobox_column("#1", is_combobox=False)
+        self.treeview_ex.set_combobox_cell(("row1", "#1"), is_combobox=False)
+
+        self.assertNotIn("row1", self.treeview_ex.combobox_rows)
+        self.assertNotIn("#1", self.treeview_ex.combobox_columns)
+        self.assertNotIn(("row1", "#1"), self.treeview_ex.combobox_cells)
+        self.assertNotIn("row1", self.treeview_ex.combobox_row_values)
+        self.assertNotIn("#1", self.treeview_ex.combobox_column_values)
+        self.assertNotIn(("row1", "#1"), self.treeview_ex.combobox_cell_values)
+
+    def test_start_edit_combobox(self):
+        """Test start_edit with combobox setup."""
+        self.treeview_ex.set_combobox_row("row1", values=["R1", "R2"])
+        self.treeview_ex.set_combobox_column("#1", values=["C1", "C2"])
+        self.treeview_ex.set_combobox_cell(("row1", "#1"), values=["S1", "S2"])
+
+        self.treeview_ex.start_edit(("row1", "#1"))
+
+        self.assertEqual(self.treeview_ex._editing_cell, ("row1", "#1"))
+        self.assertEqual(
+            self.treeview_ex._editing_combobox_values, ["S1", "S2"]
+        )
+        self.assertEqual(self.treeview_ex.combobox.get(), "A1")
+        self.assertEqual(
+            list(self.treeview_ex.combobox["values"]), ["S1", "S2"]
+        )
+
+    def test_update_cell_readonly(self):
+        """Test update_cell when the cell is readonly."""
+        self.treeview_ex.set_readonly_row("row1")
+        self.treeview_ex._editing_cell = ("row1", "#1")
+        widget = MagicMock()
+        widget.get.return_value = "Updated"
+
+        self.treeview_ex.update_cell(("row1", "#1"), widget)
+
+        self.assertEqual(self.treeview_ex.get_cell_value(("row1", "#1")), "A1")
+        self.assertIsNone(self.treeview_ex._editing_cell)
 
 
 if __name__ == "__main__":
