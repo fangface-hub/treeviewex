@@ -237,3 +237,9 @@ tkinter の Treeview に以下の機能を追加<br>`Added the following feature
 
 このプロジェクトは MIT ライセンスの下で公開されています。<br>
 `This project is licensed under the MIT License.`
+
+---
+
+## Sponsor
+
+[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/fangface-hub)
