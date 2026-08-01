@@ -1,5 +1,7 @@
 # python3
-"""Treeview拡張版."""
+"""Treeview extension."""
+
+from __future__ import annotations
 
 from enum import Enum, auto
 from tkinter import HORIZONTAL, VERTICAL, Entry, Event, Frame
@@ -8,7 +10,7 @@ from typing import Callable, Union
 
 
 class CellType(Enum):
-    """セルのタイプを定義する列挙型."""
+    """Enum defining cell types."""
 
     ENTRY = auto()
     READONLY = auto()
@@ -20,75 +22,75 @@ __all__ = ["CellType", "TreeviewEx"]
 
 def _colid2colindex(column_id: str) -> int:
     """
-    列IDを列インデックスに変換する.
+    Convert a column ID to a column index.
 
     Parameters
     ----------
     column_id : str
-        列ID.
+        Column ID.
 
     Returns
     -------
     int
-        列インデックス.
+        Column index.
 
     """
     return int(column_id[1:]) - 1
 
 
 class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
-    """拡張TreeView."""
+    """Extended Treeview widget."""
 
     def __init__(self, master=None, **kwargs):
         """
-        コンストラクタ.
+        Initialize the widget.
 
         Parameters
         ----------
-        master : マスター, optional
-            DESCRIPTION. The default is None.
-        **kwargs : TYPE
-            引数.
+        master : widget, optional
+            Parent widget. The default is None.
+        **kwargs : dict
+            Additional options passed to tkinter.ttk.Treeview.
 
         Returns
         -------
         None.
 
         """
-        # 初期化
-        self.readonly_rows = set()  # 編集不可の行IDを保持
-        self.readonly_columns = set()  # 編集不可の列IDを保持
-        self.readonly_cells = set()  # 編集不可のセル (行ID, 列ID) を保持
-        self.combobox_rows = set()  # comboboxの行IDを保持
-        self.combobox_columns = set()  # comboboxの列IDを保持
-        self.combobox_cells = set()  # comboboxのセル (行ID, 列ID) を保持
-        self.combobox_row_values = {}  # comboboxの行IDに対応するリストを保持
-        self.combobox_column_values = {}  # comboboxの列IDに対応するリストを保持
-        self.combobox_cell_values = {}  # comboboxのセルに対応するリストを保持
+        # Initialization
+        self.readonly_rows = set()  # Keep read-only row IDs
+        self.readonly_columns = set()  # Keep read-only column IDs
+        self.readonly_cells = set()  # Keep read-only cells as (row, col)
+        self.combobox_rows = set()  # Keep row IDs that use a combobox
+        self.combobox_columns = set()  # Keep column IDs that use a combobox
+        self.combobox_cells = set()  # Keep combobox cells as (row, col)
+        self.combobox_row_values = {}  # Map row IDs to combobox value lists
+        self.combobox_column_values = {}  # Map columns to combobox value lists
+        self.combobox_cell_values = {}  # Map cells to combobox value lists
 
-        # その他の初期化処理
+        # Other initialization
         self.frame = Frame(master=master)
         super().__init__(self.frame, **kwargs)
 
-        # Entry ウィジェットをメンバとして作成
+        # Create the Entry widget as a member
         self.entry = Entry(self)
         self.entry.bind("<Return>", self._on_return)
         self.entry.bind("<FocusOut>", self._on_focus_out)
         self.entry.bind("<Escape>", self._on_escape)
 
-        # Combobox ウィジェットをメンバとして作成
+        # Create the Combobox widget as a member
         self.combobox = Combobox(self)
         self.combobox.bind("<Return>", self._on_return)
         self.combobox.bind("<Escape>", self._on_escape)
         self.combobox.bind("<<ComboboxSelected>>", self._on_combobox_selected)
 
-        # 縦方向スクロールバーを作成し、Canvasに接続
+        # Create a vertical scrollbar and connect it
         self.scrollbar_y = Scrollbar(
             self.frame, orient=VERTICAL, command=self._on_scroll_y
         )
         self.configure(yscrollcommand=self.scrollbar_y.set)
 
-        # 横方向スクロールバーを作成し、Canvasに接続
+        # Create a horizontal scrollbar and connect it
         self.scrollbar_x = Scrollbar(
             self.frame, orient=HORIZONTAL, command=self._on_scroll_x
         )
@@ -98,28 +100,28 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         self.scrollbar_y.grid(row=0, column=1, sticky="ns")
         self.scrollbar_x.grid(row=1, column=0, sticky="ew")
 
-        # Frameの行と列の重みを設定して、レイアウトを調整
+        # Set frame row/column weights to adjust the layout
         self.frame.grid_rowconfigure(0, weight=1)
         self.frame.grid_columnconfigure(0, weight=1)
 
-        # <Double-1> イベントに対する追加の振る舞いをバインド
+        # Bind additional behavior for the <Double-1> event
         self._additional_bind_double_click()
 
-        # マウスホイールイベントをバインド
+        # Bind the mouse wheel event
         self.bind("<MouseWheel>", self._on_mouse_wheel)
 
-        # 編集中のセル情報を保持するための変数
+        # Variables to keep editing state
         self._editing_cell = None
-        self._editing_combobox_values = None  # 編集中の combobox リストを保持
+        self._editing_combobox_values = None  # Values for active combobox edit
 
     def _on_scroll_y(self, *args):
         """
-        縦スクロール時の処理.
+        Handle vertical scroll events.
 
         Parameters
         ----------
         *args : tuple
-            スクロールバーの引数.
+            Scrollbar callback arguments.
 
         Returns
         -------
@@ -132,12 +134,12 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
     def _on_scroll_x(self, *args):
         """
-        横スクロール時の処理.
+        Handle horizontal scroll events.
 
         Parameters
         ----------
         *args : tuple
-            スクロールバーの引数.
+            Scrollbar callback arguments.
 
         Returns
         -------
@@ -150,12 +152,12 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
     def _on_mouse_wheel(self, event):
         """
-        マウスホイール操作時の処理.
+        Handle mouse wheel events.
 
         Parameters
         ----------
         event : Event
-            マウスホイールイベント.
+            Mouse wheel event.
 
         Returns
         -------
@@ -165,36 +167,36 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         if self._editing_cell:
             self.cancel_edit()
 
-        # 縦スクロールを実行
+        # Run vertical scrolling
         self.yview_scroll(-1 * (event.delta // 120), "units")
 
     def _additional_bind_double_click(self):
         """
-        ダブルクリックハンドラの追加.
+        Add a double-click handler.
 
         Returns
         -------
         None.
 
         """
-        # 既存の <Double-1> バインドを維持して追加する
+        # Keep the existing <Double-1> binding and add this handler
         super().bind("<Double-1>", self._combined_handler, add="+")
 
     def _combined_handler(self, event: Event):
         """
-        ダブルクリック時のハンドラ.
+        Handle double-click events.
 
         Parameters
         ----------
         event : Event
-            イベント.
+            Event object.
 
         Returns
         -------
         None.
 
         """
-        self.on_double_click(event)  # 追加の振る舞い
+        self.on_double_click(event)  # Additional behavior
 
     def bind(
         self,
@@ -203,21 +205,21 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         add: bool | None = None,
     ) -> str:
         """
-        bindのオーバーライド.
+        Override bind.
 
         Parameters
         ----------
         sequence : str, optional
-            Treeview.bind()のsequence引数同様. The default is None.
+            Same as the sequence argument of Treeview.bind().
         func : Callable, optional
-            Treeview.bind()のfunc引数同様. The default is None.
+            Same as the func argument of Treeview.bind().
         add : bool, optional
-            Treeview.bind()のadd引数同様. The default is None.
+            Same as the add argument of Treeview.bind().
 
         Returns
         -------
         str
-            Treeview.bind()のreturn同様.
+            Same return value as Treeview.bind().
 
         """
         if sequence == "<Double-1>":
@@ -233,12 +235,12 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
     def pack(self, **kwargs):
         """
-        packのオーバーライド.
+        Override pack.
 
         Parameters
         ----------
         **kwargs : dict
-            pcak引数の辞書.
+            Keyword arguments for pack.
 
         Returns
         -------
@@ -249,12 +251,12 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
     def grid(self, **kwargs):
         """
-        gridのオーバーライド.
+        Override grid.
 
         Parameters
         ----------
         **kwargs : dict
-            grid引数の辞書.
+            Keyword arguments for grid.
 
         Returns
         -------
@@ -265,21 +267,21 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
     def column(self, column: str, option=None, **kw):
         """
-        列生成のオーバーライド.
+        Override column.
 
         Parameters
         ----------
         column : str
-            列ID.
+            Column ID.
         option : str, optional
-            オプション. The default is None.
+            Column option. The default is None.
         **kw : dict
-            キーワード辞書.
+            Additional keyword arguments.
 
         Returns
         -------
-        TYPE
-            DESCRIPTION.
+        Any
+            Return value from Treeview.column().
 
         """
         if option is None and "stretch" not in kw:
@@ -288,17 +290,17 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
     def get_clicked_cell_id_pair(self, event: Event) -> tuple:
         """
-        クリック位置のセルのID取得.
+        Get the cell IDs at the clicked position.
 
         Parameters
         ----------
         event : Event
-            イベント.
+            Click event.
 
         Returns
         -------
-        cell_id_pair: tuple
-            (行ID,列ID)のペア.
+        tuple
+            Pair of (row ID, column ID).
 
         """
         cell_id_pair = ("", "")
@@ -313,12 +315,12 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
     def on_double_click(self, event: Event) -> None:
         """
-        ダブルクリック.
+        Handle double-click action.
 
         Parameters
         ----------
         event : Event
-            イベント.
+            Event object.
 
         Returns
         -------
@@ -331,24 +333,24 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
     def get_cell_value(self, cell_id_pair: tuple) -> str:
         """
-        セルの値取得.
+        Get a cell value.
 
         Parameters
         ----------
         cell_id_pair : tuple
-            DESCRIPTION.
+            Pair of (row ID, column ID).
 
         Returns
         -------
         str
-            DESCRIPTION.
+            Cell value.
 
         """
         row_id, column_id = cell_id_pair
         return self.item(row_id, "values")[_colid2colindex(column_id)]
 
     def start_edit(self, cell_id_pair: tuple) -> None:
-        """セルの編集を開始."""
+        """Start editing a cell."""
         if not self.is_valid_cell(cell_id_pair):
             raise ValueError(f"Invalid cell specified: {cell_id_pair}")
 
@@ -356,15 +358,15 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
         cell_type = self._get_cell_type(cell_id_pair)
 
-        # readonly の場合は編集をスキップ
+        # Skip editing when the cell is read-only
         if cell_type == CellType.READONLY:
             return
 
-        # 編集処理を続行
+        # Continue with edit processing
         self._editing_cell = cell_id_pair
         cell_value = self.get_cell_value(cell_id_pair)
 
-        # セルの位置とサイズを取得
+        # Get the cell position and size
         bbox = self.bbox(row_id, column_id)
         if not bbox:
             raise ValueError(
@@ -373,9 +375,9 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
         x, y, width, height = bbox
 
-        # combobox の場合
+        # For combobox cells
         if cell_type == CellType.COMBOBOX:
-            # リストを保存
+            # Keep the current value list
             if cell_id_pair in self.combobox_cell_values:
                 self._editing_combobox_values = self.combobox_cell_values[
                     cell_id_pair
@@ -389,7 +391,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
             else:
                 self._editing_combobox_values = []
 
-            # Combobox ウィジェットを設定
+            # Configure the Combobox widget
             self.combobox.delete(0, "end")
             self.combobox.insert(0, cell_value)
             self.combobox["values"] = self._editing_combobox_values
@@ -397,7 +399,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
             self.combobox.place(x=x, y=y, width=width, height=height)
             self.combobox.focus_set()
         elif cell_type == CellType.ENTRY:
-            # Entry ウィジェットを設定
+            # Configure the Entry widget
             self.entry.delete(0, "end")
             self.entry.insert(0, cell_value)
             self.entry.place(x=x, y=y, width=width, height=height)
@@ -405,22 +407,22 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
     def is_valid_cell(self, cell_id_pair: tuple) -> bool:
         """
-        セルの存在を確認する.
+        Check whether a cell exists.
 
         Parameters
         ----------
         cell_id_pair : tuple
-            (行ID, 列ID) のペア.
+            Pair of (row ID, column ID).
 
         Returns
         -------
         bool
-            セルが有効であれば True, 無効であれば False.
+            True if the cell is valid, otherwise False.
 
         """
         row_id, column_id = cell_id_pair
         try:
-            col_index = _colid2colindex(column_id)  # 列IDを列インデックスに変換
+            col_index = _colid2colindex(column_id)  # Convert column ID to index
         except (ValueError, IndexError):  # pragma: no cover
             return False  # pragma: no cover
 
@@ -432,45 +434,45 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         return True
 
     def _on_return(self, event):  # pylint: disable=unused-argument
-        """<Return> イベントハンドラー."""
+        """Handle the <Return> event."""
         if self._editing_cell:
             widget = event.widget
             self.update_cell(self._editing_cell, widget)
 
     def _on_focus_out(self, event):  # pylint: disable=unused-argument
-        """<FocusOut> イベントハンドラー."""
+        """Handle the <FocusOut> event."""
         if self._editing_cell:
             widget = event.widget
             self.update_cell(self._editing_cell, widget)
 
     def _on_escape(self, event):  # pylint: disable=unused-argument
-        """<Escape> イベントハンドラー."""
+        """Handle the <Escape> event."""
         self.cancel_edit()
 
     def _on_combobox_selected(self, event):  # pylint: disable=unused-argument
-        """Combobox 選択時イベントハンドラー."""
+        """Handle combobox selection events."""
         if self._editing_cell:
             widget = event.widget
             self.update_cell(self._editing_cell, widget)
 
     def _get_cell_type(self, cell_id_pair: tuple) -> CellType:
         """
-        セルの種類を判定する.
+        Determine a cell type.
 
         Parameters
         ----------
         cell_id_pair : tuple
-            (行ID, 列ID).
+            Pair of (row ID, column ID).
 
         Returns
         -------
         CellType
-            CellType.READONLY, CellType.COMBOBOX, または CellType.ENTRY.
+            CellType.READONLY, CellType.COMBOBOX, or CellType.ENTRY.
 
         """
         row_id, column_id = cell_id_pair
 
-        # readonly のチェック
+        # Check read-only settings
         if (
             row_id in self.readonly_rows
             or column_id in self.readonly_columns
@@ -478,7 +480,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         ):
             return CellType.READONLY
 
-        # combobox のチェック
+        # Check combobox settings
         if (
             row_id in self.combobox_rows
             or column_id in self.combobox_columns
@@ -491,22 +493,22 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
     def update_cell(
         self, cell_id_pair: tuple, widget: Union[Entry, Combobox]
     ) -> None:
-        """セルの値を更新."""
+        """Update a cell value."""
         if not self.is_valid_cell(cell_id_pair):
             raise ValueError(f"Invalid cell specified: {cell_id_pair}")
 
         cell_type = self._get_cell_type(cell_id_pair)
 
-        # readonly の場合は更新しない
+        # Do not update when the cell is read-only
         if cell_type == CellType.READONLY:
             self.cancel_edit()
             return
 
-        # ENTRY または COMBOBOX の場合は値を更新
+        # Update value for ENTRY or COMBOBOX cells
         if cell_type == CellType.ENTRY or cell_type == CellType.COMBOBOX:
-            # 新しい値を取得
+            # Get the new value
             new_value = widget.get()
-            # 現在の値と異なる場合のみ更新
+            # Update only when the value changed
             if new_value != self.get_cell_value(cell_id_pair):
                 values = list(self.item(cell_id_pair[0], "values"))
                 col_index = _colid2colindex(cell_id_pair[1])
@@ -517,20 +519,20 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
     def cancel_edit(self):
         """
-        編集中止.
+        Cancel editing.
 
         Returns
         -------
         None.
 
         """
-        self.entry.place_forget()  # Entry を非表示にする
-        self.combobox.place_forget()  # Combobox を非表示にする
+        self.entry.place_forget()  # Hide Entry
+        self.combobox.place_forget()  # Hide Combobox
         self._editing_cell = None
         self._editing_combobox_values = None
 
     def set_readonly_row(self, row_id: str, readonly: bool = True) -> None:
-        """行を readonly に設定."""
+        """Set a row as read-only."""
         if readonly:
             self.readonly_rows.add(row_id)
         else:
@@ -539,7 +541,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
     def set_readonly_column(
         self, column_id: str, readonly: bool = True
     ) -> None:
-        """列を readonly に設定."""
+        """Set a column as read-only."""
         if readonly:
             self.readonly_columns.add(column_id)
         else:
@@ -548,7 +550,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
     def set_readonly_cell(
         self, cell_id_pair: tuple, readonly: bool = True
     ) -> None:
-        """セルを readonly に設定."""
+        """Set a cell as read-only."""
         if readonly:
             self.readonly_cells.add(cell_id_pair)
         else:
@@ -557,7 +559,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
     def set_combobox_row(
         self, row_id: str, values: list | None = None, is_combobox: bool = True
     ) -> None:
-        """行を combobox に設定."""
+        """Set a row to use a combobox."""
         if is_combobox:
             self.combobox_rows.add(row_id)
             if values is not None:
@@ -572,7 +574,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         values: list | None = None,
         is_combobox: bool = True,
     ) -> None:
-        """列を combobox に設定."""
+        """Set a column to use a combobox."""
         if is_combobox:
             self.combobox_columns.add(column_id)
             if values is not None:
@@ -587,7 +589,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         values: list | None = None,
         is_combobox: bool = True,
     ) -> None:
-        """セルを combobox に設定."""
+        """Set a cell to use a combobox."""
         if is_combobox:
             self.combobox_cells.add(cell_id_pair)
             if values is not None:
