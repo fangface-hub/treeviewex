@@ -1,0 +1,29 @@
+[project]
+name = "treeviewex"
+version = "1.0.0"
+description = "A TreeView extension for Tkinter"
+readme = "README.md"
+authors = [{ name = "fangface" }]
+requires-python = ">=3.9"
+dependencies = []
+license = { text = "MIT" }
+keywords = ["tkinter", "treeview", "ui"]
+
+[project.urls]
+Homepage = "https://github.com/fangface-hub/treeviewex"
+Repository = "https://github.com/fangface-hub/treeviewex"
+Issues = "https://github.com/fangface-hub/treeviewex/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/treeviewex"]
+
+[dependency-groups]
+dev = ["pytest>=8.0", "coverage>=7.0"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
