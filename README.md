@@ -1,245 +1,144 @@
 # TreeviewEx
 
-Treeview の拡張版<br>
-`Enhanced version of Treeview`
+[日本語](README_ja.md)
 
-tkinter の Treeview に以下の機能を追加<br>`Added the following features to tkinter Treeview`
+Treeview extension for Tkinter.
 
-* 縦横スクロールバー<br>`Vertical and horizontal scroll bars`
-* セルの編集<br>`Editing a cell`
-* 行、列、セルの readonly設定<br>`Readonly setting for rows, columns, and cells`
+This package adds the following features to the standard tkinter Treeview:
 
-その他の機能は tkinter の Treeview と同じ<br>`Other features are the same as tkinter Treeview.`
+- Vertical and horizontal scroll bars
+- Cell editing
+- Read-only settings for rows, columns, and cells
 
----
-
-## テスト方法<br>`How to test`
-
-1. 必要なパッケージをインストールする<br>`Install required packages`
-
-    ```bash
-    pip install coverage
-    ```
-
-1. テストを実行する<br>`Run the tests`
-
-    ```bash
-    coverage run -m unittest discover
-    ```
-
-1. カバレッジレポートを表示する<br>`Display the coverage report`
-
-    ```bash
-    coverage report -m
-    ```
-
-1. HTML レポートを生成する（オプション）<br>`Generate an HTML report (optional)`
-
-    ```bash
-    coverage html
-    ```
+All other behavior is the same as the standard tkinter Treeview.
 
 ---
 
-## ビルド方法<br>`How to build`
+## Testing
 
-1. 必要なパッケージをインストールする<br>`Install required packages`
+1. Install dependencies
 
-    ```bash
-    pip install setuptools wheel
-    ```
+   ```bash
+   uv sync --group dev
+   ```
 
-1. ビルドコマンドを打つ<br>`Run the build command`
+2. Run the tests
 
-    ```bash
-    python setup.py bdist_wheel
-    ```
+   ```bash
+   uv run pytest -q
+   ```
 
-1. `dist` フォルダ内に生成された `.whl` ファイルを確認する<br>`Check the generated .whl file in the dist folder`
+3. Show coverage report
 
----
+   ```bash
+   uv run coverage run -m pytest -q
+   uv run coverage report -m
+   ```
 
-## 使用方法<br>`How to use`
+4. Generate an HTML report (optional)
 
-1. パッケージをインストールする<br>`Install the package`
-
-    ```bash
-    pip install path/to/TreeviewEx.whl
-    ```
-
-1. サンプルコードを実行する<br>`Run the sample code`
-
-    ```python
-    from treeviewex import TreeviewEx
-    from tkinter import Tk
-
-    # 使用例(Usage Example)
-    root = Tk()
-    root.title("TreeviewEx Example")
-
-    # TreeviewExを配置(Place TreeviewEx)
-    treeview_ex = TreeviewEx(root)
-    treeview_ex.grid(row=0, column=0, sticky="nsew")
-
-    # Treeviewの列を設定(Set Treeview columns)
-    columns = ("col1", "col2", "col3", "col4")
-    treeview_ex["columns"] = columns
-    treeview_ex.heading("#0", text="", anchor="w")
-    treeview_ex.column("#0", width=0, stretch=False)
-    for col in columns:
-        treeview_ex.heading(col, text=f"{col.capitalize()}")
-        # 各列の幅を手動で設定(Manually set the width of each column)
-        treeview_ex.column(col, width=100)
-
-    # テストデータを追加(Add test data)
-    for i in range(100):
-        treeview_ex.insert(
-            "",
-            "end",
-            text="",
-            values=(f"Value {i}A", f"Value {i}B", f"Value {i}C", f"Value {i}D"),
-        )
-
-    # readonlyの設定(Readonly settings)
-    # 行をreadonlyに設定(Set a row to readonly)
-    treeview_ex.set_readonly_row(row_id="I002", readonly=True)
-    # 列をreadonlyに設定(Set a column to readonly)
-    treeview_ex.set_readonly_column(column_id="#2", readonly=True)
-    treeview_ex.set_readonly_cell(
-        cell_id_pair=("I003", "#3"),
-        readonly=True
-    )  # セルをreadonlyに設定(Set a cell to readonly)
-
-    # Frameの行と列の重みを設定して、レイアウトを調整
-    # (Adjust the layout by setting row and column
-    #  weights for the frame)
-    root.grid_rowconfigure(0, weight=1)
-    root.grid_columnconfigure(0, weight=1)
-
-    root.mainloop()
-    ```
+   ```bash
+   uv run coverage html
+   ```
 
 ---
 
-## 公開インターフェース<br>`Public Interfaces`
+## Build
 
-以下は `TreeviewEx` クラスの主な公開インターフェースです。<br>`The following are the main public interfaces of the TreeviewEx class.`
+1. Install dependencies
 
-### `set_readonly_row(row_id: str, readonly: bool = True) -> None`
+   ```bash
+   uv sync --group dev
+   ```
 
-指定した行を編集不可（readonly）に設定します。<br>`Set the specified row to readonly.`
+2. Build the package
 
-* __Parameters__
-  * `row_id` (`str`): 編集不可にする行の ID。<br>`The ID of the row to set as readonly.`
-  * `readonly` (`bool`, optional): `True` の場合は編集不可、`False` の場合は編集可能に設定します。デフォルトは `True`。<br>`Set to True to make the row readonly, or False to make it editable. Default is True.`
+   ```bash
+   uv build
+   ```
 
-* __Example__
-
-  ```python
-  treeview_ex.set_readonly_row(row_id="I002", readonly=True)
-  ```
+3. Check the generated wheel in the dist folder
 
 ---
 
-### `set_readonly_column(column_id: str, readonly: bool = True) -> None`
+## Usage
 
-指定した列を編集不可（readonly）に設定します。<br>`Set the specified column to readonly.`
+1. Install the package
 
-* __Parameters__
-  * `column_id` (`str`): 編集不可にする列の ID。<br>`The ID of the column to set as readonly.`
-  * `readonly` (`bool`, optional): `True` の場合は編集不可、`False` の場合は編集可能に設定します。デフォルトは `True`。<br>`Set to True to make the column readonly, or False to make it editable. Default is True.`
+   ```bash
+   uv pip install path/to/TreeviewEx.whl
+   ```
 
-* __Example__
+2. Run the sample
 
-  ```python
-  treeview_ex.set_readonly_column(column_id="#2", readonly=True)
-  ```
+   ```bash
+   uv run python sample/sample.py
+   ```
 
----
+Example:
 
-### `set_readonly_cell(cell_id_pair: tuple, readonly: bool = True) -> None`
+```python
+from treeviewex import TreeviewEx
+from tkinter import Tk
 
-指定したセルを編集不可（readonly）に設定します。<br>`Set the specified cell to readonly.`
+root = Tk()
+root.title("TreeviewEx Example")
 
-* __Parameters__
-  * `cell_id_pair` (`tuple`): 編集不可にするセルの (行ID, 列ID) のペア。<br>`A tuple (row ID, column ID) of the cell to set as readonly.`
-  * `readonly` (`bool`, optional): `True` の場合は編集不可、`False` の場合は編集可能に設定します。デフォルトは `True`。<br>`Set to True to make the cell readonly, or False to make it editable. Default is True.`
+treeview_ex = TreeviewEx(root)
+treeview_ex.grid(row=0, column=0, sticky="nsew")
 
-* __Example__
+columns = ("col1", "col2", "col3", "col4")
+treeview_ex["columns"] = columns
+treeview_ex.heading("#0", text="", anchor="w")
+treeview_ex.column("#0", width=0, stretch=False)
+for col in columns:
+    treeview_ex.heading(col, text=f"{col.capitalize()}")
+    treeview_ex.column(col, width=100)
 
-  ```python
-  treeview_ex.set_readonly_cell(cell_id_pair=("I003", "#3"), readonly=True)
-  ```
+for i in range(100):
+    treeview_ex.insert(
+        "",
+        "end",
+        text="",
+        values=(f"Value {i}A", f"Value {i}B", f"Value {i}C", f"Value {i}D"),
+    )
 
----
+root.grid_rowconfigure(0, weight=1)
+root.grid_columnconfigure(0, weight=1)
 
-### `set_combobox_row(row_id: str, values: list = None, is_combobox: bool = True) -> None`
-
-指定した行を Combobox で編集可能に設定します。<br>`Set the specified row to be editable with a Combobox.`
-
-* __Parameters__
-  * `row_id` (`str`): Combobox にする行の ID。<br>`The ID of the row to set as combobox.`
-  * `values` (`list`, optional): Combobox のドロップダウンメニューに表示する値のリスト。デフォルトは `None`。<br>`A list of values to display in the Combobox dropdown menu. Default is None.`
-  * `is_combobox` (`bool`, optional): `True` の場合は Combobox に設定、`False` の場合は Combobox を解除します。デフォルトは `True`。<br>`Set to True to make the row a combobox, or False to disable it. Default is True.`
-
-* __Example__
-
-  ```python
-  treeview_ex.set_combobox_row(
-      row_id="I004",
-      values=["Option A", "Option B", "Option C"],
-      is_combobox=True)
-  ```
+root.mainloop()
+```
 
 ---
 
-### `set_combobox_column(column_id: str, values: list = None, is_combobox: bool = True) -> None`
+## Public interfaces
 
-指定した列を Combobox で編集可能に設定します。<br>`Set the specified column to be editable with a Combobox.`
+### set_readonly_row(row_id: str, readonly: bool = True) -> None
 
-* __Parameters__
-  * `column_id` (`str`): Combobox にする列の ID。<br>`The ID of the column to set as combobox.`
-  * `values` (`list`, optional): Combobox のドロップダウンメニューに表示する値のリスト。デフォルトは `None`。<br>`A list of values to display in the Combobox dropdown menu. Default is None.`
-  * `is_combobox` (`bool`, optional): `True` の場合は Combobox に設定、`False` の場合は Combobox を解除します。デフォルトは `True`。<br>`Set to True to make the column a combobox, or False to disable it. Default is True.`
+Set the specified row to readonly.
 
-* __Example__
+### set_readonly_column(column_id: str, readonly: bool = True) -> None
 
-  ```python
-  treeview_ex.set_combobox_column(
-      column_id="#1",
-      values=["Option X", "Option Y", "Option Z"],
-      is_combobox=True)
-  ```
+Set the specified column to readonly.
 
----
+### set_readonly_cell(cell_id_pair: tuple, readonly: bool = True) -> None
 
-### `set_combobox_cell(cell_id_pair: tuple, values: list = None, is_combobox: bool = True) -> None`
+Set the specified cell to readonly.
 
-指定したセルを Combobox で編集可能に設定します。<br>`Set the specified cell to be editable with a Combobox.`
+### set_combobox_row(row_id: str, values: list = None, is_combobox: bool = True) -> None
 
-* __Parameters__
-  * `cell_id_pair` (`tuple`): Combobox にするセルの (行ID, 列ID) のペア。<br>`A tuple (row ID, column ID) of the cell to set as combobox.`
-  * `values` (`list`, optional): Combobox のドロップダウンメニューに表示する値のリスト。デフォルトは `None`。<br>`A list of values to display in the Combobox dropdown menu. Default is None.`
-  * `is_combobox` (`bool`, optional): `True` の場合は Combobox に設定、`False` の場合は Combobox を解除します。デフォルトは `True`。<br>`Set to True to make the cell a combobox, or False to disable it. Default is True.`
+Set the specified row to be editable with a Combobox.
 
-* __Example__
+### set_combobox_column(column_id: str, values: list = None, is_combobox: bool = True) -> None
 
-  ```python
-  treeview_ex.set_combobox_cell(
-      cell_id_pair=("I005", "#2"),
-      values=["Option A", "Option B", "Option C", "Option D"],
-      is_combobox=True)
-  ```
+Set the specified column to be editable with a Combobox.
+
+### set_combobox_cell(cell_id_pair: tuple, values: list = None, is_combobox: bool = True) -> None
+
+Set the specified cell to be editable with a Combobox.
 
 ---
 
-## ライセンス<br>`License`
+## License
 
-このプロジェクトは MIT ライセンスの下で公開されています。<br>
-`This project is licensed under the MIT License.`
-
----
-
-## Sponsor
-
-[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=for-the-badge&logo=githubsponsors&logoColor=white)](https://github.com/sponsors/fangface-hub)
+This project is licensed under the MIT License.

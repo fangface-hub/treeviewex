@@ -1,5 +1,6 @@
 # python3
 """Treeview拡張版."""
+
 from enum import Enum, auto
 from tkinter import HORIZONTAL, VERTICAL, Entry, Event, Frame
 from tkinter.ttk import Combobox, Scrollbar, Treeview
@@ -343,7 +344,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
             DESCRIPTION.
 
         """
-        (row_id, column_id) = cell_id_pair
+        row_id, column_id = cell_id_pair
         return self.item(row_id, "values")[_colid2colindex(column_id)]
 
     def start_edit(self, cell_id_pair: tuple) -> None:
