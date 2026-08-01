@@ -1,6 +1,8 @@
 # python3
 """Treeview拡張版."""
 
+from __future__ import annotations
+
 from enum import Enum, auto
 from tkinter import HORIZONTAL, VERTICAL, Entry, Event, Frame
 from tkinter.ttk import Combobox, Scrollbar, Treeview
