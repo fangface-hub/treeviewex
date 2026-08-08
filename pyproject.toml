@@ -1,8 +1,8 @@
 [project]
 name = "treeviewex"
-version = "1.0.0"
+version = "1.0.2"
 description = "A TreeView extension for Tkinter"
-readme = "README.md"
+readme = "README_pypi.md"
 authors = [{ name = "fangface" }]
 requires-python = ">=3.9"
 dependencies = []
