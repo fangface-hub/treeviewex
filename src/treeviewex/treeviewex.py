@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from enum import Enum, auto
-from tkinter import HORIZONTAL, VERTICAL, Entry, Event, Frame
+from tkinter import HORIZONTAL, VERTICAL, Entry, Event, Frame, Menu
 from tkinter.ttk import Combobox, Scrollbar, Treeview
 from typing import Callable, Union
 
@@ -109,6 +109,10 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
         # Bind the mouse wheel event
         self.bind("<MouseWheel>", self._on_mouse_wheel)
+        super().bind("<Button-3>", self._on_right_click, add="+")
+
+        self._context_menu_target_item = ""
+        self.context_menu = self._create_context_menu()
 
         # Variables to keep editing state
         self._editing_cell = None
@@ -193,10 +197,93 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
         Returns
         -------
-        None.
+        str or None
+            "break" when editing started, to suppress the default toggle.
 
         """
-        self.on_double_click(event)  # Additional behavior
+        return self.on_double_click(event)  # Additional behavior
+
+    def _on_right_click(self, event: Event) -> None:
+        """Handle right-click events on expandable Treeview rows."""
+        item_id = self.identify_row(event.y)
+        if not item_id or not self.get_children(item_id):
+            return
+
+        self._context_menu_target_item = item_id
+        self.selection_set(item_id)
+        self.focus(item_id)
+        self.context_menu.tk_popup(event.x_root, event.y_root)
+
+    def _expand_descendants(self, item_id: str, expand: bool = True) -> None:
+        """Expand or collapse the node and all descendants."""
+        self.item(item_id, open=expand)
+        for child_id in self.get_children(item_id):
+            self.item(child_id, open=expand)
+            self._expand_descendants(child_id, expand=expand)
+
+    def _create_context_menu(self) -> Menu:
+        """Create the standard popup menu for tree items."""
+        menu = Menu(self, tearoff=0)
+
+        menu.add_command(
+            label="Expand this node",
+            command=self._expand_current_node,
+        )
+        menu.add_command(
+            label="Collapse this node",
+            command=self._collapse_current_node,
+        )
+        menu.add_separator()
+        menu.add_command(
+            label="Expand all children recursively",
+            command=self._expand_all_children,
+        )
+        menu.add_command(
+            label="Collapse all children recursively",
+            command=self._collapse_all_children,
+        )
+        return menu
+
+    def _get_context_menu_target_item(self) -> str:
+        """Return the item clicked for the popup menu."""
+        if self._context_menu_target_item:
+            return self._context_menu_target_item
+        selected = self.selection()
+        if selected:
+            return selected[0]
+        return ""
+
+    def _expand_current_node(self) -> None:
+        """Expand the clicked item."""
+        item_id = self._get_context_menu_target_item()
+        if item_id:
+            self.selection_set(item_id)
+            self.focus(item_id)
+            self.item(item_id, open=True)
+
+    def _collapse_current_node(self) -> None:
+        """Collapse the clicked item."""
+        item_id = self._get_context_menu_target_item()
+        if item_id:
+            self.selection_set(item_id)
+            self.focus(item_id)
+            self.item(item_id, open=False)
+
+    def _expand_all_children(self) -> None:
+        """Expand all descendants of the clicked item."""
+        item_id = self._get_context_menu_target_item()
+        if item_id:
+            self.selection_set(item_id)
+            self.focus(item_id)
+            self._expand_descendants(item_id, expand=True)
+
+    def _collapse_all_children(self) -> None:
+        """Collapse all descendants of the clicked item."""
+        item_id = self._get_context_menu_target_item()
+        if item_id:
+            self.selection_set(item_id)
+            self.focus(item_id)
+            self._expand_descendants(item_id, expand=False)
 
     def bind(
         self,
@@ -225,13 +312,15 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         if sequence == "<Double-1>":
 
             def combined_handler(event):
-                self.on_double_click(event)
+                result = self.on_double_click(event)
                 if func:
                     func(event)
+                return result
 
             return super().bind(sequence, combined_handler, add=add)
-        else:
+        if sequence == "<Button-3>":
             return super().bind(sequence, func, add=add)
+        return super().bind(sequence, func, add=add)
 
     def pack(self, **kwargs):
         """
@@ -313,7 +402,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         )
         return cell_id_pair
 
-    def on_double_click(self, event: Event) -> None:
+    def on_double_click(self, event: Event) -> str | None:
         """
         Handle double-click action.
 
@@ -324,12 +413,17 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
         Returns
         -------
-        None.
+        str or None
+            "break" when editing started, to stop the default
+            expand/collapse toggle binding from also firing.
 
         """
         cell_id_pair = self.get_clicked_cell_id_pair(event)
-        if cell_id_pair != ("", ""):
-            self.start_edit(cell_id_pair)
+        if cell_id_pair != ("", "") and self.is_valid_cell(cell_id_pair):
+            if self.start_edit(cell_id_pair):
+                # Give editing priority over the row expand/collapse toggle
+                return "break"
+        return None
 
     def get_cell_value(self, cell_id_pair: tuple) -> str:
         """
@@ -349,8 +443,8 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         row_id, column_id = cell_id_pair
         return self.item(row_id, "values")[_colid2colindex(column_id)]
 
-    def start_edit(self, cell_id_pair: tuple) -> None:
-        """Start editing a cell."""
+    def start_edit(self, cell_id_pair: tuple) -> bool:
+        """Start editing a cell. Returns True if editing actually started."""
         if not self.is_valid_cell(cell_id_pair):
             raise ValueError(f"Invalid cell specified: {cell_id_pair}")
 
@@ -360,7 +454,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
 
         # Skip editing when the cell is read-only
         if cell_type == CellType.READONLY:
-            return
+            return False
 
         # Continue with edit processing
         self._editing_cell = cell_id_pair
@@ -405,6 +499,8 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
             self.entry.place(x=x, y=y, width=width, height=height)
             self.entry.focus_set()
 
+        return True
+
     def is_valid_cell(self, cell_id_pair: tuple) -> bool:
         """
         Check whether a cell exists.
@@ -426,9 +522,7 @@ class TreeviewEx(Treeview):  # pylint: disable=too-many-ancestors
         except (ValueError, IndexError):  # pragma: no cover
             return False  # pragma: no cover
 
-        if row_id not in self.get_children() or col_index >= len(
-            self["columns"]
-        ):
+        if not self.exists(row_id) or col_index >= len(self["columns"]):
             return False
 
         return True

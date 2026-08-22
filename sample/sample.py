@@ -1,66 +1,91 @@
 # sample.py
 # pylint: disable=E1102
-from tkinter import Tk
+from tkinter import Label, Tk
 
 from treeviewex import TreeviewEx
 
-# 使用例(Usage Example)
 root = Tk()
-root.title("TreeviewEx Example")
+root.title("TreeviewEx Context Menu Demo")
 
-# TreeviewExを配置(Place TreeviewEx)
+status = Label(
+    root,
+    text=(
+        "Right-click parent rows to open the built-in menu; "
+        "double-click leaf cells to edit them."
+    ),
+)
+status.pack(fill="x", padx=8, pady=(8, 4))
+
 treeview_ex = TreeviewEx(root)
-treeview_ex.grid(row=0, column=0, sticky="nsew")
+treeview_ex.pack(fill="both", expand=True, padx=8, pady=(0, 8))
 
-# Treeviewの列を設定(Set Treeview columns)
-columns = ("col1", "col2", "col3", "col4")
+columns = ("status", "owner", "notes")
 treeview_ex["columns"] = columns
-treeview_ex.heading("#0", text="", anchor="w")
-treeview_ex.column("#0", width=0, stretch=False)
+treeview_ex.heading("#0", text="Project", anchor="w")
+treeview_ex.column("#0", width=220, stretch=False)
 for col in columns:
-    treeview_ex.heading(col, text=f"{col.capitalize()}")
-    # 各列の幅を手動で設定(Manually set the width of each column)
-    treeview_ex.column(col, width=100)
+    treeview_ex.heading(col, text=col.capitalize())
+    treeview_ex.column(col, width=150)
 
-# テストデータを追加(Add test data)
-for i in range(100):
-    treeview_ex.insert(
-        "",
-        "end",
-        text="",
-        values=(f"Value {i}A", f"Value {i}B", f"Value {i}C", f"Value {i}D"),
-    )
+# Demo data with nested rows so the popup menu can be tested visually.
+project1 = treeview_ex.insert(
+    "",
+    "end",
+    iid="project1",
+    text="Alpha Project",
+    values=("Active", "Alice", "Ready for review"),
+    open=True,
+)
+phase1 = treeview_ex.insert(
+    project1,
+    "end",
+    iid="project1_phase1",
+    text="Phase 1",
+    values=("In progress", "Alice", "Requirements and design"),
+    open=True,
+)
+treeview_ex.insert(
+    phase1,
+    "end",
+    iid="project1_task1",
+    text="Task 1",
+    values=("Open", "Alice", "Gather requirements"),
+)
+treeview_ex.insert(
+    phase1,
+    "end",
+    iid="project1_task2",
+    text="Task 2",
+    values=("In progress", "Bob", "Implement UI"),
+)
 
-# readonlyの設定(Readonly settings)
-# 行をreadonlyに設定(Set a row to readonly)
-treeview_ex.set_readonly_row(row_id="I002", readonly=True)
-# 列をreadonlyに設定(Set a column to readonly)
-treeview_ex.set_readonly_column(column_id="#2", readonly=True)
-treeview_ex.set_readonly_cell(
-    cell_id_pair=("I003", "#3"),
-    readonly=True)  # セルをreadonlyに設定(Set a cell to readonly)
+project2 = treeview_ex.insert(
+    "",
+    "end",
+    iid="project2",
+    text="Beta Project",
+    values=("Planning", "Carol", "Waiting for approval"),
+    open=False,
+)
+phase2 = treeview_ex.insert(
+    project2,
+    "end",
+    iid="project2_phase1",
+    text="Phase A",
+    values=("Queued", "David", "Review spec"),
+    open=False,
+)
+treeview_ex.insert(
+    phase2,
+    "end",
+    iid="project2_task1",
+    text="Task A",
+    values=("Queued", "David", "Review spec"),
+)
 
-# comboboxの設定(Combobox settings)
-# 行をcomboboxに設定(Set a row to combobox)
-treeview_ex.set_combobox_row(
-    row_id="I004",
-    values=["Row Option A", "Row Option B", "Row Option C"],
-    is_combobox=True)
-# 列をcomboboxに設定(Set a column to combobox)
-treeview_ex.set_combobox_column(
-    column_id="#1",
-    values=["Col Option A", "Col Option B", "Col Option C"],
-    is_combobox=True)
-# セルをcomboboxに設定(Set a cell to combobox with specific values)
-treeview_ex.set_combobox_cell(
-    cell_id_pair=("I005", "#3"),
-    values=["Option A", "Option B", "Option C", "Option D"],
-    is_combobox=True)
-
-# Frameの行と列の重みを設定して、レイアウトを調整
-# (Adjust the layout by setting row and column
-#  weights for the frame)
-root.grid_rowconfigure(0, weight=1)
-root.grid_columnconfigure(0, weight=1)
-
+# The TreeviewEx context menu is built in and works without extra app code.
+# Right-click a parent row to test:
+# expand/collapse and recursive expand/collapse.
+# Double-click a leaf cell to edit its value.
+root.geometry("720x420")
 root.mainloop()

@@ -1,6 +1,6 @@
 [project]
 name = "treeviewex"
-version = "1.0.2"
+version = "1.1.0"
 description = "A TreeView extension for Tkinter"
 readme = "README_pypi.md"
 authors = [{ name = "fangface" }]

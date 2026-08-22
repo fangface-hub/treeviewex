@@ -75,39 +75,133 @@ All other behavior is the same as the standard tkinter Treeview.
    uv run python sample/sample.py
    ```
 
-Example:
+Simple example without nested rows:
 
 ```python
-from treeviewex import TreeviewEx
 from tkinter import Tk
+from treeviewex import TreeviewEx
 
 root = Tk()
-root.title("TreeviewEx Example")
+root.title("TreeviewEx Simple Example")
 
 treeview_ex = TreeviewEx(root)
-treeview_ex.grid(row=0, column=0, sticky="nsew")
+treeview_ex.pack(fill="both", expand=True)
 
-columns = ("col1", "col2", "col3", "col4")
-treeview_ex["columns"] = columns
-treeview_ex.heading("#0", text="", anchor="w")
-treeview_ex.column("#0", width=0, stretch=False)
-for col in columns:
-    treeview_ex.heading(col, text=f"{col.capitalize()}")
-    treeview_ex.column(col, width=100)
+treeview_ex["columns"] = ("status", "owner", "notes")
+treeview_ex.heading("#0", text="Task", anchor="w")
+treeview_ex.column("#0", width=120, stretch=False)
+for col in treeview_ex["columns"]:
+    treeview_ex.heading(col, text=col.capitalize())
+    treeview_ex.column(col, width=150)
 
-for i in range(100):
-    treeview_ex.insert(
-        "",
-        "end",
-        text="",
-        values=(f"Value {i}A", f"Value {i}B", f"Value {i}C", f"Value {i}D"),
-    )
+treeview_ex.insert(
+    "",
+    "end",
+    iid="task1",
+    text="Task 1",
+    values=("Open", "Alice", "Gather requirements"),
+)
+treeview_ex.insert(
+    "",
+    "end",
+    iid="task2",
+    text="Task 2",
+    values=("In progress", "Bob", "Implement UI"),
+)
+treeview_ex.insert(
+    "",
+    "end",
+    iid="task3",
+    text="Task 3",
+    values=("Done", "Carol", "Review spec"),
+)
 
-root.grid_rowconfigure(0, weight=1)
-root.grid_columnconfigure(0, weight=1)
-
+root.geometry("600x200")
 root.mainloop()
 ```
+
+Double-click a cell to edit its value. Since there are no child rows, double-clicking never toggles expand/collapse.
+
+Example with a built-in context menu:
+
+```python
+from tkinter import Tk
+from treeviewex import TreeviewEx
+
+root = Tk()
+root.title("TreeviewEx Context Menu Demo")
+
+# No custom popup code is needed. TreeviewEx automatically binds the
+# right-click menu to each visible item.
+treeview_ex = TreeviewEx(root)
+treeview_ex.pack(fill="both", expand=True)
+
+treeview_ex["columns"] = ("status", "owner", "notes")
+treeview_ex.heading("#0", text="Project", anchor="w")
+treeview_ex.column("#0", width=220, stretch=False)
+for col in treeview_ex["columns"]:
+    treeview_ex.heading(col, text=col.capitalize())
+    treeview_ex.column(col, width=150)
+
+project1 = treeview_ex.insert(
+    "",
+    "end",
+    iid="project1",
+    text="Alpha Project",
+    values=("Active", "Alice", "Ready for review"),
+    open=True,
+)
+phase1 = treeview_ex.insert(
+    project1,
+    "end",
+    iid="project1_phase1",
+    text="Phase 1",
+    values=("In progress", "Alice", "Requirements and design"),
+    open=True,
+)
+treeview_ex.insert(
+    phase1,
+    "end",
+    iid="project1_task1",
+    text="Task 1",
+    values=("Open", "Alice", "Gather requirements"),
+)
+treeview_ex.insert(
+    phase1,
+    "end",
+    iid="project1_task2",
+    text="Task 2",
+    values=("In progress", "Bob", "Implement UI"),
+)
+
+project2 = treeview_ex.insert(
+    "",
+    "end",
+    iid="project2",
+    text="Beta Project",
+    values=("Planning", "Carol", "Waiting for approval"),
+)
+phase2 = treeview_ex.insert(
+    project2,
+    "end",
+    iid="project2_phase1",
+    text="Phase A",
+    values=("Queued", "David", "Review spec"),
+    open=False,
+)
+treeview_ex.insert(
+    phase2,
+    "end",
+    iid="project2_task1",
+    text="Task A",
+    values=("Queued", "David", "Review spec"),
+)
+
+root.geometry("700x400")
+root.mainloop()
+```
+
+Right-click a parent row with children to test the built-in menu actions: expand, collapse, and recursive expand/collapse. Leaf rows do not show the popup menu; double-click their cells to edit values.
 
 ---
 
